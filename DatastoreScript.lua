@@ -29,67 +29,60 @@ Portfolio: https://devforum.roblox.com/t/766093
 local datatable = game.ServerStorage.DataStore
 
 -- // Don't edit below if u don't know what ur doing
-local datastore2 = require(1936396537)
+local datastore2 = require(script.DataStore2)
 
+datastore2.Combine("MainKey")
 
-local function savefunction(plr)
+local function savefunction(plr,v)
 
 	local tab = {}
 
-	for i,v in pairs(datatable:GetChildren()) do
-		if plr:findFirstChild(v.Name) then
-			local faketable = {}
-			for e,a in pairs(plr[v.Name]:GetChildren()) do
-				faketable[a.Name]= a.Value
-			end
-			tab[v.Name] = faketable
+	if v then
+		for e,a in pairs(v:GetChildren()) do
+			tab[a.Name]= a.Value
 		end
 	end
 	return tab
 end
 
-local function plradded(plr)
-	local data = datastore2("TestDataStorexD",plr)
-	for i,v in pairs(datatable:GetChildren()) do
-		local clone = v:Clone()
-		clone.Parent = plr
-	end
 
-	local plrdata
-	local succ,err = pcall(function()
-		plrdata= data:Get()
-	end)
-	if succ then
-		if plrdata then
-			for i,v in pairs(data:Get()) do
-				if plr:findFirstChild(i) then
-					if v then
-						for e,a in pairs(v) do
-							if plr[i]:findFirstChild(e) then
-								plr[i][e].Value = a
-							end
-						end
+
+datastore2.Combine("MasterKey")
+local function plradded(plr)
+	for i,v in pairs(datatable:GetChildren()) do
+		local folder = v:Clone() folder.Parent = plr
+		local data = datastore2(v.Name,plr)
+
+		local save
+		local succ,err = pcall(function()
+			save=data:Get()
+		end)
+
+		if succ then
+
+			-- Loads Save
+			if save then
+				for e,a in pairs(folder:GetChildren()) do
+					if save[a.Name] then
+						a.Value = save[a.Name]
 					end
 				end
 			end
-		end
 
-
-		for i,v in pairs(datatable:GetChildren()) do
-			if plr:findFirstChild(v.Name) then
-				for e,a in pairs(plr[v.Name]:GetChildren()) do
-					a.Changed:Connect(function()
-						data:Set(savefunction(plr))
-					end)
-				end
+			-- Save Data when Updates
+			for _,plrdata in pairs(folder:GetChildren()) do
+				plrdata.Changed:connect(function()
+					data:Set(savefunction(plr,folder))
+				end)
 			end
+
 		end
 
-
-		while true do wait(60)
-			data:Set(savefunction(plr))
+		if not succ then
+			print(err)
 		end
 	end
+	
 end
 
 game.Players.PlayerAdded:Connect(plradded)
